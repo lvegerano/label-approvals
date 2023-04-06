@@ -1,6 +1,6 @@
 # Label Required Approvals Action
 
-This is a Github Action to require the approval of a Pull Reques from a team member based on the labels applied to it.
+This is a Github Action to require the approval of a Pull Request from a team member based on the labels applied to it.
 ![example](./assets/checks.png)
 
 ## Configuration
@@ -40,7 +40,7 @@ on:
   pull_request_review:
   pull_request:
     types: [opened, reopened, labeled, unlabeled]
-jobs
+jobs:
   required-approvals:
     runs-on: ubuntu-latest
     steps:
