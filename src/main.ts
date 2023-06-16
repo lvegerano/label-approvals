@@ -1,13 +1,12 @@
 import {
   getInput,
-  error as coreError,
   setFailed,
   notice,
   error,
 } from "@actions/core";
 import { context } from "@actions/github";
-import { createClient, getApprovals, getPrLabels } from "./github";
-import { intersection } from "./intersection";
+import { createClient, getApprovals, getPrLabels, getTeamMembers } from "./github";
+import { intersection, flattenApprovers } from "./utils";
 import { getLabelConfig, getRequireApprovals } from "./labels";
 import {
   reportStatus,
@@ -47,7 +46,10 @@ const run = async () => {
       context.repo.repo
     );
 
-    const requiredReviews = getRequireApprovals(yamlConfig, prLabels);
+    const requiredReviews = await flattenApprovers(
+      getRequireApprovals(yamlConfig, prLabels),
+      (team: string) => getTeamMembers(client, team)
+    );
 
     const approvals = await getApprovals(
       client,
@@ -56,7 +58,7 @@ const run = async () => {
       context.repo.repo
     );
 
-    const needsApprovalFrom = Object.entries(requiredReviews).reduce(
+    const needsApprovalFrom = Object.entries(requiredReviews).reduce<string[]>(
       (accum, [key, value]) => {
         const intersect = intersection([value, approvals]);
         if (!intersect.length) {
@@ -64,7 +66,7 @@ const run = async () => {
         }
         return accum;
       },
-      [] as string[]
+      []
     );
 
     if (needsApprovalFrom.length) {

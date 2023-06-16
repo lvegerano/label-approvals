@@ -1,5 +1,6 @@
 import { context, getOctokit } from "@actions/github";
 import { GitHub } from "@actions/github/lib/utils";
+import { RestEndpointMethodTypes } from "@octokit/plugin-rest-endpoint-methods/dist-types/generated/parameters-and-response-types";
 
 export function createClient(token: string): InstanceType<typeof GitHub> {
   return getOctokit(token);
@@ -46,4 +47,33 @@ export async function getApprovals(
   });
 
   return [...reviewers];
+}
+
+type ListMembersParams = RestEndpointMethodTypes["teams"]["listMembersInOrg"]["parameters"]
+
+function extractTeamPartsAsParams(team: string): ListMembersParams {
+  const teamParts = team.split("/");
+  if (teamParts.length !== 2) {
+    throw new Error(`'${team}' is not a valid team handler`);
+  }
+
+  const org = teamParts[0].replace("@", "");
+  const team_slug = teamParts[1];
+
+  return {
+    org,
+    team_slug
+  };
+}
+
+export async function getTeamMembers(
+  client: InstanceType<typeof GitHub>,
+  team: string,
+): Promise<string[]> {
+  const params = extractTeamPartsAsParams(team);
+
+  const { data: members } = await client.rest.teams.listMembersInOrg(params);
+  const teamMembers = members.map((member) => member.login);
+
+  return teamMembers;
 }

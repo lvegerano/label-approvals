@@ -35,10 +35,10 @@ export function getRequireApprovals(
   yamlConfig: YamlConfigInt,
   labels: string[]
 ) {
-  return labels.reduce((accum, label) => {
+  return labels.reduce<Record<string, string[]>>((accum, label) => {
     if (yamlConfig[label]?.length) {
       accum[label] = [...yamlConfig[label]];
     }
     return accum;
-  }, {} as { [key: string]: string[] });
+  }, {});
 }
